@@ -1,15 +1,34 @@
+import glob
 import whisper
 import ssl
+import os
+
 ssl._create_default_https_context = ssl._create_unverified_context
 
-# Загружаем модель (можно заменить на 'small', 'medium' или 'large' для большей точности)
-model = whisper.load_model("large")
+model = whisper.load_model("small")
 
-# Запрашиваем путь к видеофайлу у пользователя
-video_path = input("Введите путь к видеофайлу: ")
+media_files = glob.glob("./*.*")
+media_files = [f for f in media_files if f.lower().endswith(('.mp4', '.mp3', '.wav', '.m4a'))]
 
-# Транскрибируем файл целиком, явно указывая русский язык
-result = model.transcribe(video_path, language="ru")
+if not media_files:
+    print("В текущей папке не найдено подходящих медиафайлов.")
+    exit()
 
-# Выводим текст
-print(result["text"])
+print("Доступные медиафайлы:")
+for i, file in enumerate(media_files):
+    print(f"{i + 1}: {file}")
+
+choice = input("Введите номер файла, который хотите транскрибировать: ")
+
+try:
+    index = int(choice) - 1
+    video_path = media_files[index]
+except (ValueError, IndexError):
+    print("Неверный выбор.")
+    exit()
+
+try:
+    result = model.transcribe(video_path, language="ru")
+    print(result["text"])
+except Exception as e:
+    print(f"Ошибка при транскрипции: {e}")
